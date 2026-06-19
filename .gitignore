@@ -1,5 +1,6 @@
 notes/*
 chroma_langchain_db/*
+knowledge_graph
 __pycache__/*
 
 .env

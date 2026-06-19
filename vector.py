@@ -1,32 +1,19 @@
-# from langchain_ollama import OllamaEmbeddings
-# from langchain_core.documents import Document
-# from langchain_chroma import Chroma
+from langchain_core.documents import Document
 from pathlib import Path
 import re
 from utils.graph_db import GraphDB
 
 # Get config variables
-from config import NOTES_LOCATION, VEC_DB_LOCATION, GRAPH_DB_LOCATION, SCENE_SPLITTER
+from config import NOTES_LOCATION, GRAPH_DB_LOCATION, vector_store
 
-# Temporary values instead of llm
-from utils.farzi import Document, VecStore
-vector_store = VecStore()
+# # Temporary values instead of llm
+# from utils.farzi import Document, VecStore
+# vector_store = VecStore()
 
 graph = GraphDB(GRAPH_DB_LOCATION)
 graph.create()
 
-
-# embeddings = OllamaEmbeddings(model="mxbai-embed-large")
-
-# vector_store = Chroma(
-#     collection_name="mha_campaign",
-#     persist_directory=VEC_DB_LOCATION,
-#     embedding_function=embeddings
-# )
-
-# retriever = vector_store.as_retriever(
-#     search_kwargs={"k": 7}
-# )
+retriever = vector_store.as_retriever(search_kwargs={"k": 7})
 
 class obsidianReader():
     def __init__(self, notes_path: Path, graph: GraphDB):
@@ -68,7 +55,7 @@ class obsidianReader():
         arc_name = arc[4:]                              # Remove the "Arc " prefix
 
         # Split the content into scenes
-        scene_pattern = re.compile(rf"^{SCENE_SPLITTER}\s*(.*?)\:?(?:\s+#(\S+))?\s*$", re.MULTILINE)
+        scene_pattern = re.compile(rf"^### \s*(.*?)\:?(?:\s+#(\S+))?\s*$", re.MULTILINE)
         matches = list(scene_pattern.finditer(content))
 
         # Extract the scenes and create documents
@@ -86,6 +73,7 @@ class obsidianReader():
             documents.append(Document(
                 page_content=scene_text,
                 metadata={
+                    "id": scene_id,
                     "type": "scene",
                     "arc": arc_name,
                     "session": session_name,
@@ -98,24 +86,27 @@ class obsidianReader():
 
     def readCharacters(self):        
         # Get NPC data
-        for file_name, content in self.readMdFiles(Path(f"{self.notes_path}/characters/")):
-            content = self.preProcessContent(name=file_name[:-3], content=content, path=f"{self.notes_path}/characters/{file_name}")
+        for file_name_ext, content in self.readMdFiles(Path(f"{self.notes_path}/characters/")):
+            file_name = file_name_ext[:-3]
+            content = self.preProcessContent(name=file_name, content=content, path=f"{self.notes_path}/characters/{file_name_ext}")
             document = Document(
                 page_content=content, 
-                metadata={'structure': 'character', 'type': 'npc', 'name': file_name})
+                metadata={"id": file_name, 'structure': 'character', 'type': 'npc', 'name': file_name})
             vector_store.add_documents(documents=[document], ids=[file_name])
 
         # Get Player data
-        for file_name, content in self.readMdFiles(Path(f"{self.notes_path}/characters/players/")):
-            content = self.preProcessContent(name=file_name[:-3], content=content, path=f"{self.notes_path}/characters/{file_name}")
+        for file_name_ext, content in self.readMdFiles(Path(f"{self.notes_path}/characters/players/")):
+            file_name = file_name_ext[:-3]
+            content = self.preProcessContent(name=file_name, content=content, path=f"{self.notes_path}/characters/{file_name_ext}")
             document = Document(
                 page_content=content, 
-                metadata={'structure': 'character', 'type': 'player', 'name': file_name})
+                metadata={"id": file_name, 'structure': 'character', 'type': 'player', 'name': file_name})
             vector_store.add_documents(documents=[document], ids=[file_name])
 
     def readStructures(self):
         # Get structure data
-        for file_name, content in self.readMdFiles(Path(f"{self.notes_path}/structures/")):
+        for file_name_ext, content in self.readMdFiles(Path(f"{self.notes_path}/structures/")):
+            file_name = file_name_ext[:-3]
             if content.startswith(('# Description')):
                 structure_type = 'entity'
             elif content.startswith(('# Members')):
@@ -125,10 +116,10 @@ class obsidianReader():
             else:
                 raise ValueError(f"Unknown structure type for file {file_name} based on content")
             
-            content = self.preProcessContent(name=file_name[:-3], content=content, path=f"{self.notes_path}/structures/{file_name}")
+            content = self.preProcessContent(name=file_name, content=content, path=f"{self.notes_path}/structures/{file_name_ext}")
             document = Document(
                 page_content=content, 
-                metadata={'structure': structure_type, 'name': file_name})
+                metadata={"id": file_name, "structure": structure_type, "name": file_name})
             vector_store.add_documents(documents=[document], ids=[file_name])
 
     def readSessions(self):
@@ -139,9 +130,6 @@ class obsidianReader():
         for arc in arc_folders:
             for file_name, content in self.readMdFiles(Path(f"{self.notes_path}/{arc}/")):
                 documents, scene_ids = self.chunkSession(content, arc, file_path=f"{self.notes_path}/{arc}/{file_name}")
-                for scene in documents:
-                    print(scene)
-                    print("\n\n")
                 vector_store.add_documents(documents=documents, ids=scene_ids)
 
     def resolveSessionGhosts(self):
