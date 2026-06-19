@@ -1,0 +1,16 @@
+1) Add chunking to separate scenes from sessions                    #Done
+2) Add preprocessing:
+    i) Entity resolution                                            #Done
+    ii) # identification (remove todo and add meta to headers)      #Done
+
+3) Add a graph?
+    i) 1 hop neighbours
+    ii) 2 hops for groups
+
+4) Hybrid search (bm25 + retreiver)?
+
+5) Upgrade models?
+
+6) Langchain implementation
+
+7) chat history
