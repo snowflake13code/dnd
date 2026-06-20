@@ -1,6 +1,6 @@
-from config import vector_store, GRAPH_DECAY, INITIAL_K, FINAL_K, GRAPH_DB_LOCATION
-from graph_db import GraphDB
-from logger_config import logger
+from .config import vector_store, GRAPH_DECAY, INITIAL_K, FINAL_K, GRAPH_DB_LOCATION
+from .graph_db import GraphDB
+from .logger_config import logger
 
 
 def graphRAGRetriever(query: str) -> dict:

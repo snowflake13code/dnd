@@ -1,6 +1,6 @@
 from langchain_core.documents import Document
 from pathlib import Path
-from graph_db import GraphDB
+from .graph_db import GraphDB
 import re
 import json
 

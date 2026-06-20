@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from config import LOG_LOCATION
+from .config import LOG_LOCATION
 
 Path("log").mkdir(exist_ok=True)
 
