@@ -7,12 +7,14 @@ import json
 # Get config variables
 from config import NOTES_LOCATION, GRAPH_DB_LOCATION, JSON_STATE_LOCATION, vector_store
 
+graph = GraphDB(GRAPH_DB_LOCATION)
+graph.create()
+
 
 class obsidianReader():
-    def __init__(self):
-        self.notes_path = NOTES_LOCATION
-        self.graph = GraphDB(GRAPH_DB_LOCATION)
-        self.graph.create()
+    def __init__(self, notes_path: Path, graph: GraphDB):
+        self.notes_path = notes_path
+        self.graph = graph
 
         self.latest_arc = 0
         self.latest_session = 0
@@ -208,3 +210,8 @@ class obsidianReader():
         self.readSessions()
         self.resolveSessionGhosts()
         self.saveJson()
+
+
+if __name__ == "__main__":
+    reader = obsidianReader(NOTES_LOCATION, graph)
+    reader.readNotes()
