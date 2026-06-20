@@ -2,9 +2,9 @@
 from langchain_ollama import OllamaEmbeddings
 from langchain_chroma import Chroma
 
-NOTES_LOCATION = "notes"
-VEC_DB_LOCATION = "./chroma_langchain_db"
-GRAPH_DB_LOCATION = './knowledge_graph'
+NOTES_LOCATION = "../mha_notes"
+VEC_DB_LOCATION = "./database/chroma_langchain_db"
+GRAPH_DB_LOCATION = './database/knowledge_graph'
 
 # Vector-store related data
 embeddings = OllamaEmbeddings(model="mxbai-embed-large")
@@ -17,7 +17,6 @@ vector_store = Chroma(
 
 
 # Retriever related data
-INITIAL_K = 10
+INITIAL_K = 3
 FINAL_K = 5
-SCORE_THRESHOLD = 0.4
 GRAPH_DECAY = 0.9

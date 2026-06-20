@@ -1,32 +1,67 @@
-from langchain_ollama.llms import OllamaLLM
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
-from vector import retriever
+from langchain_core.runnables import RunnableParallel, RunnablePassthrough, RunnableLambda
+from langchain_core.output_parsers import StrOutputParser
+from graphRAG_retriever import graphRAGRetriever
+
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
 
-model = OllamaLLM(model="llama3.2")
-# model = ChatGroq(model="llama-3.3-70b-versatile", api_key=os.getenv("GROQ_API_KEY"))
+# -----------------------------
+# LLM
+# -----------------------------
 
-template = """
-You are a dungeons and dragons camapaign assistant.
+llm = ChatGroq(
+    model="llama-3.3-70b-versatile",
+    api_key=os.getenv("GROQ_API_KEY"),
+)
 
-Some notes from the campaign: {reviews}
+# -----------------------------
+# Retriever
+# -----------------------------
 
-User's question: {question}
-"""
-prompt = ChatPromptTemplate.from_template(template)
-chain = prompt | model
+retriever = RunnableLambda(lambda x: graphRAGRetriever(x['question']))
 
-while True:
-    print("\n\n-------------------------------")
-    question = input("Ask your question (q to quit): ")
-    print("\n\n")
-    if question == "q":
-        break
-    
-    reviews = retriever.invoke(question)
-    result = chain.invoke({"reviews": reviews, "question": question})
-    print(result)
+# -----------------------------
+# Prompt
+# -----------------------------
+
+prompt = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            """
+            You are a Dungeons & Dragons campaign assistant.
+            Use the campaign notes to answer questions.
+            If the answer is not contained in the notes, say so instead of inventing lore.
+
+            Campaign Notes:
+            {context}
+            """,
+        ),
+        ("human", "{question}"),
+    ]
+)
+
+# -----------------------------
+# Retrieval Chain
+# -----------------------------
+
+retrieval_chain = RunnableParallel(
+    {
+        "question": RunnablePassthrough(),
+        "context": retriever,
+    }
+)
+
+chain = retrieval_chain | prompt | llm | StrOutputParser()
+
+# -----------------------------
+# Chat Loop
+# -----------------------------
+
+while (question := input("\nAsk your question (q to quit): ")) != "q":
+    print("\nAssistant:")
+    print(chain.invoke({"question": question}))

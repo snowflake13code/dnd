@@ -1,19 +1,14 @@
 from langchain_core.documents import Document
 from pathlib import Path
+from graph_db import GraphDB
 import re
-from utils.graph_db import GraphDB
 
 # Get config variables
 from config import NOTES_LOCATION, GRAPH_DB_LOCATION, vector_store
 
-# # Temporary values instead of llm
-# from utils.farzi import Document, VecStore
-# vector_store = VecStore()
-
 graph = GraphDB(GRAPH_DB_LOCATION)
 graph.create()
 
-retriever = vector_store.as_retriever(search_kwargs={"k": 7})
 
 class obsidianReader():
     def __init__(self, notes_path: Path, graph: GraphDB):
@@ -42,7 +37,7 @@ class obsidianReader():
         # Handle Obsidian links
         def replace_link(match):
             link_text = match.group(1)
-            target = link_text.split("|", 1)[0].strip()
+            target = link_text.split("|", 1)[0].strip().lower()
             self.graph.link(name, target)
             return target
 
@@ -87,7 +82,7 @@ class obsidianReader():
     def readCharacters(self):        
         # Get NPC data
         for file_name_ext, content in self.readMdFiles(Path(f"{self.notes_path}/characters/")):
-            file_name = file_name_ext[:-3]
+            file_name = file_name_ext[:-3].lower()
             content = self.preProcessContent(name=file_name, content=content, path=f"{self.notes_path}/characters/{file_name_ext}")
             document = Document(
                 page_content=content, 
@@ -96,7 +91,7 @@ class obsidianReader():
 
         # Get Player data
         for file_name_ext, content in self.readMdFiles(Path(f"{self.notes_path}/characters/players/")):
-            file_name = file_name_ext[:-3]
+            file_name = file_name_ext[:-3].lower()
             content = self.preProcessContent(name=file_name, content=content, path=f"{self.notes_path}/characters/{file_name_ext}")
             document = Document(
                 page_content=content, 
@@ -106,7 +101,7 @@ class obsidianReader():
     def readStructures(self):
         # Get structure data
         for file_name_ext, content in self.readMdFiles(Path(f"{self.notes_path}/structures/")):
-            file_name = file_name_ext[:-3]
+            file_name = file_name_ext[:-3].lower()
             if content.startswith(('# Description')):
                 structure_type = 'entity'
             elif content.startswith(('# Members')):
@@ -114,7 +109,7 @@ class obsidianReader():
             elif content.startswith(('# Location')):
                 structure_type = 'space'
             else:
-                raise ValueError(f"Unknown structure type for file {file_name} based on content")
+                raise ValueError(f"Unknown structure type for file {file_name_ext} based on content")
             
             content = self.preProcessContent(name=file_name, content=content, path=f"{self.notes_path}/structures/{file_name_ext}")
             document = Document(
@@ -189,5 +184,6 @@ class obsidianReader():
         self.resolveSessionGhosts()
 
 
-reader = obsidianReader(NOTES_LOCATION, graph)
-reader.readNotes()
+if __name__ == "__main__":
+    reader = obsidianReader(NOTES_LOCATION, graph)
+    reader.readNotes()
