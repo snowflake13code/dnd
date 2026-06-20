@@ -1,6 +1,6 @@
 notes/*
-database/*
-log/*
-__pycache__/*
+database/
+log/
+__pycache__/
 
 .env

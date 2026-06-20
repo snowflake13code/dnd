@@ -1,6 +1,10 @@
-langchain_ollama
-langchain_core
-langchain_chroma
+streamlit
+kuzu
 
-pathlib
-pandas
+langchain_groq
+langchain_ollama
+langchain_chroma
+langchain
+
+dotenv
+pydantic

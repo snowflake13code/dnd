@@ -92,13 +92,10 @@ class chatBot():
             )
         )
 
-    def ask(self, question: str, persona: str):
-
+    def ask(self, question: str, persona: str) -> str:
+        
         response = self.chain.invoke({
             "question": question,
             "persona": persona,
         })
-        print(response)
-
-    def newChat(self):
-        pass
+        return response

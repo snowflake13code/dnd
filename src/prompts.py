@@ -116,6 +116,7 @@ default_council_prompt = ChatPromptTemplate.from_messages([
 
         FORMAT:
         Samael: (1-2 lines)
+        <leave a line>
         Lucifer: (1-2 lines)
 
         ROLE:
@@ -142,8 +143,11 @@ argue_council_prompt = ChatPromptTemplate.from_messages([
 
         FORMAT:
         Samael: (1-2 lines) opinion or statement
+        <leave a line>
         Lucifer: (1-2 lines) opinion or statement
+        <leave a line>
         Samael: (1-2 lines) rebuttal to Lucifer
+        <leave a line>
         Lucifer: (1-2 lines) rebuttal Samael
 
         RULES:
@@ -171,6 +175,7 @@ funny_council_prompt = ChatPromptTemplate.from_messages([
 
         FORMAT:
         Samael: (1-2 lines)
+        <leave a line>
         Lucifer: (1-2 lines)
 
         RULES:
