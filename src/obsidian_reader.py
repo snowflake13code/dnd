@@ -2,9 +2,10 @@ from langchain_core.documents import Document
 from pathlib import Path
 from graph_db import GraphDB
 import re
+import json
 
 # Get config variables
-from config import NOTES_LOCATION, GRAPH_DB_LOCATION, vector_store
+from config import NOTES_LOCATION, GRAPH_DB_LOCATION, JSON_STATE_LOCATION, vector_store
 
 graph = GraphDB(GRAPH_DB_LOCATION)
 graph.create()
@@ -14,7 +15,21 @@ class obsidianReader():
     def __init__(self, notes_path: Path, graph: GraphDB):
         self.notes_path = notes_path
         self.graph = graph
+
+        self.latest_arc = 0
+        self.latest_session = 0
     
+    def saveJson(self):
+        with open(JSON_STATE_LOCATION, "w") as f:
+            json.dump(
+                {
+                    "latest_arc": self.latest_arc,
+                    "latest_session": self.latest_session,
+                },
+                f,
+                indent=4
+            )
+
     @staticmethod
     def readMdFiles(base_path: Path):
         for file_path in base_path.rglob("*.md"):
@@ -118,6 +133,7 @@ class obsidianReader():
             vector_store.add_documents(documents=[document], ids=[file_name])
 
     def readSessions(self):
+
         # Get arc folders
         arc_folders = [folder.name for folder in Path(f"{self.notes_path}/").iterdir() if folder.is_dir() and folder.name.startswith("arc")]
 
@@ -126,6 +142,17 @@ class obsidianReader():
             for file_name, content in self.readMdFiles(Path(f"{self.notes_path}/{arc}/")):
                 documents, scene_ids = self.chunkSession(content, arc, file_path=f"{self.notes_path}/{arc}/{file_name}")
                 vector_store.add_documents(documents=documents, ids=scene_ids)
+
+                # Update the latest arc and session
+                SESSION_PATTERN = re.compile(r"Arc\s+(\d+)\s+Session\s+(\d+)", re.IGNORECASE)
+                match = SESSION_PATTERN.match(file_name[:-3])  # remove .md
+                if match:
+                    arc_num = int(match.group(1))
+                    session_num = int(match.group(2))
+
+                    if (arc_num > self.latest_arc or (arc_num == self.latest_arc and session_num > self.latest_session)):
+                        self.latest_arc = arc_num
+                        self.latest_session = session_num
 
     def resolveSessionGhosts(self):
         result = self.graph.conn.execute("""
@@ -182,6 +209,7 @@ class obsidianReader():
         self.readStructures()
         self.readSessions()
         self.resolveSessionGhosts()
+        self.saveJson()
 
 
 if __name__ == "__main__":
