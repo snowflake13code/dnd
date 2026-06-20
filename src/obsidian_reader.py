@@ -1,6 +1,10 @@
 from langchain_core.documents import Document
 from pathlib import Path
-from .graph_db import GraphDB
+try:
+    from .graph_db import GraphDB
+except:
+    from graph_db import GraphDB
+
 import re
 import json
 
