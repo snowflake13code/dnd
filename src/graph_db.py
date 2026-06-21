@@ -1,7 +1,4 @@
 import kuzu
-from pathlib import Path
-import shutil
-
 
 class GraphDB:
     def __init__(self, db_path: str):
@@ -115,12 +112,3 @@ class GraphDB:
             return result.get_next()
 
         return None
-
-    def destroy(self):
-        """
-        Delete the graph database from disk.
-        """
-        db_path = Path(self.db_path)
-
-        if db_path.exists():
-            shutil.rmtree(db_path)

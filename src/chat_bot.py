@@ -6,6 +6,7 @@ from langchain_core.messages import HumanMessage, AIMessage
 from .graphRAG_retriever import graphRAGRetriever, sessionRetriever, arcRetriever
 from .models import QueryRoute
 from .prompts import router_prompt, assistant_prompt, samael_prompt, lucifer_prompt, default_council_prompt, argue_council_prompt, funny_council_prompt
+from .logger_config import logger
 
 from .config import JSON_STATE_LOCATION, WINDOW_SIZE
 from dotenv import load_dotenv
@@ -20,6 +21,8 @@ load_dotenv()
 class chatBot():
     def __init__(self):
         
+        logger.info('Starting new chat-bot...')
+
         # STATE
         def get_campaign_state():
             with open(JSON_STATE_LOCATION) as f:
@@ -110,9 +113,11 @@ class chatBot():
             yield chunk
 
         # Update the message window
+        logger.info(f'Response completed for input: {question}')
         self.msg_history.append(HumanMessage(content=question))
         self.msg_history.append(AIMessage(content=full_response))
         self.msg_history = self.msg_history[-WINDOW_SIZE:]
 
     def clear(self):
+        logger.info('Reset conversation history')
         self.msg_history = []
