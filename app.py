@@ -43,12 +43,9 @@ if prompt := st.chat_input("Ask anything..."):
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Generate response
+    # Stream assistant response
     with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            response = bot.ask(prompt, persona)
-
-        st.markdown(response)
+        response = st.write_stream(bot.ask(prompt, persona))
 
     st.session_state.messages.append(
         {"role": "assistant", "content": response}
@@ -56,4 +53,5 @@ if prompt := st.chat_input("Ask anything..."):
 
 if st.sidebar.button("Clear Chat"):
     st.session_state.messages = []
+    bot.clear()           # Also clear the chatbot's internal history
     st.rerun()

@@ -26,12 +26,12 @@ class chatBot():
                 return json.load(f)
 
         # LLM
-        llm = ChatGroq(
+        self.llm = ChatGroq(
             model="llama-3.3-70b-versatile",
             api_key=os.getenv("GROQ_API_KEY"),
         )
 
-        router_llm = llm.with_structured_output(QueryRoute)
+        router_llm = self.llm.with_structured_output(QueryRoute)
          
         # ROUTER
         router_chain = router_prompt | router_llm
@@ -75,17 +75,11 @@ class chatBot():
                 return lucifer_prompt
             if persona == "council":
                 return pick_council_prompt()
-
             return assistant_prompt
-
-        # Last part of the flow
-        def run_prompt(x):
-            prompt = build_prompt(x)        # returns ChatPromptTemplate
-            chain = prompt | llm | StrOutputParser()
-            return chain.invoke(x)
+        self.build_prompt = build_prompt
 
         # FINAL RESPONSE CHAIN
-        self.chain = (
+        self.preprocess = (
             RunnablePassthrough()
             .assign(
                 latest_arc=lambda _: get_campaign_state()["latest_arc"],
@@ -93,26 +87,32 @@ class chatBot():
             )
             .assign(route=router_chain)
             .assign(context=retrieval_router)
-            | RunnableLambda(run_prompt)
         )
 
         # MESSAGE HISTORY
         self.msg_history = []
 
 
-    def ask(self, question: str, persona: str) -> str:
+    def ask(self, question: str, persona: str):
         
-        response = self.chain.invoke({
+        state = self.preprocess.invoke({
             "question": question,
             "persona": persona,
             "history": self.msg_history
         })
 
+        prompt = self.build_prompt(state)
+        chain = prompt | self.llm | StrOutputParser()
+
+        full_response = ""
+        for chunk in chain.stream(state):
+            full_response += chunk
+            yield chunk
+
         # Update the message window
         self.msg_history.append(HumanMessage(content=question))
-        self.msg_history.append(AIMessage(content=response))
+        self.msg_history.append(AIMessage(content=full_response))
         self.msg_history = self.msg_history[-WINDOW_SIZE:]
-        return response
 
     def clear(self):
         self.msg_history = []
