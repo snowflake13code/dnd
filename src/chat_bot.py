@@ -1,12 +1,13 @@
 from langchain_groq import ChatGroq
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda, RunnableBranch
+from langchain_core.messages import HumanMessage, AIMessage
 
 from .graphRAG_retriever import graphRAGRetriever, sessionRetriever, arcRetriever
 from .models import QueryRoute
 from .prompts import router_prompt, assistant_prompt, samael_prompt, lucifer_prompt, default_council_prompt, argue_council_prompt, funny_council_prompt
 
-from .config import JSON_STATE_LOCATION
+from .config import JSON_STATE_LOCATION, WINDOW_SIZE
 from dotenv import load_dotenv
 
 import os
@@ -58,6 +59,7 @@ class chatBot():
         #   question,
         #   context,
         #   route,
+        #   history,
         #   latest_arc,
         #   latest_session
         # }
@@ -75,7 +77,12 @@ class chatBot():
                 return pick_council_prompt()
 
             return assistant_prompt
-        prompt_router = RunnableLambda(build_prompt)
+
+        # Last part of the flow
+        def run_prompt(x):
+            prompt = build_prompt(x)        # returns ChatPromptTemplate
+            chain = prompt | llm | StrOutputParser()
+            return chain.invoke(x)
 
         # FINAL RESPONSE CHAIN
         self.chain = (
@@ -86,16 +93,26 @@ class chatBot():
             )
             .assign(route=router_chain)
             .assign(context=retrieval_router)
-            .assign(prompt=prompt_router)
-            | RunnableLambda(
-                lambda x: (llm | StrOutputParser()).invoke(x["prompt"])
-            )
+            | RunnableLambda(run_prompt)
         )
+
+        # MESSAGE HISTORY
+        self.msg_history = []
+
 
     def ask(self, question: str, persona: str) -> str:
         
         response = self.chain.invoke({
             "question": question,
             "persona": persona,
+            "history": self.msg_history
         })
+
+        # Update the message window
+        self.msg_history.append(HumanMessage(content=question))
+        self.msg_history.append(AIMessage(content=response))
+        self.msg_history = self.msg_history[-WINDOW_SIZE:]
         return response
+
+    def clear(self):
+        self.msg_history = []

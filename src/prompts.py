@@ -1,4 +1,4 @@
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 router_prompt = ChatPromptTemplate.from_messages(
     [
@@ -56,6 +56,7 @@ assistant_prompt = ChatPromptTemplate.from_messages(
             {context}
             """,
         ),
+        MessagesPlaceholder("history"),
         ("human", "{question}"),
     ]
 )
@@ -88,6 +89,7 @@ samael_prompt = ChatPromptTemplate.from_messages([
         Campaign Notes:
         {context}
         """),
+    MessagesPlaceholder("history"),
     ("human", "{question}")
 ])
 
@@ -105,6 +107,7 @@ lucifer_prompt = ChatPromptTemplate.from_messages([
         Campaign Notes:
         {context}
         """),
+    MessagesPlaceholder("history"),
     ("human", "{question}")
 ])
 
@@ -132,6 +135,7 @@ default_council_prompt = ChatPromptTemplate.from_messages([
         Campaign Notes:
         {context}
         """),
+    MessagesPlaceholder("history"),
     ("human", "{question}")
 ])
 
@@ -165,6 +169,7 @@ argue_council_prompt = ChatPromptTemplate.from_messages([
         Campaign Notes:
         {context}
         """),
+    MessagesPlaceholder("history"),
     ("human", "{question}")
 ])
 
@@ -192,5 +197,6 @@ funny_council_prompt = ChatPromptTemplate.from_messages([
         Campaign Notes:
         {context}
         """),
+    MessagesPlaceholder("history"),
     ("human", "{question}")
 ])

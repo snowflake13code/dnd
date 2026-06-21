@@ -20,3 +20,6 @@ vector_store = Chroma(
 INITIAL_K = 5
 FINAL_K = 8
 GRAPH_DECAY = 0.9
+
+# History related data
+WINDOW_SIZE = 6
