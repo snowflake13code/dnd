@@ -1,6 +1,24 @@
-notes/*
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Private input and generated campaign data
+/notes/
+/mha_notes/
 database/
 log/
-__pycache__/
+*.sqlite3
+*.sqlite3-*
+knowledge_graph
+knowledge_graph.wal
 
-.env
+# Python and tooling
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.DS_Store
