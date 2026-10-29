@@ -1,18 +1,14 @@
 from langchain_core.documents import Document
 from pathlib import Path
-try:
+if __package__:
     from .graph_db import GraphDB
-except:
+    from .config import NOTES_LOCATION, GRAPH_DB_LOCATION, JSON_STATE_LOCATION, vector_store
+else:
     from graph_db import GraphDB
+    from config import NOTES_LOCATION, GRAPH_DB_LOCATION, JSON_STATE_LOCATION, vector_store
 
 import re
 import json
-
-# Get config variables
-from config import NOTES_LOCATION, GRAPH_DB_LOCATION, JSON_STATE_LOCATION, vector_store
-
-graph = GraphDB(GRAPH_DB_LOCATION)
-graph.create()
 
 
 class obsidianReader():
@@ -217,5 +213,10 @@ class obsidianReader():
 
 
 if __name__ == "__main__":
-    reader = obsidianReader(NOTES_LOCATION, graph)
+    notes_path = Path(NOTES_LOCATION)
+    if not notes_path.is_dir():
+        raise SystemExit(f"Notes directory does not exist: {notes_path}")
+    graph = GraphDB(GRAPH_DB_LOCATION)
+    graph.create()
+    reader = obsidianReader(notes_path, graph)
     reader.readNotes()

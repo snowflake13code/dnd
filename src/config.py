@@ -1,11 +1,18 @@
-# Locations
+import os
+from dotenv import load_dotenv
+
 from langchain_ollama import OllamaEmbeddings
 from langchain_chroma import Chroma
 
-NOTES_LOCATION = "../mha_notes"
-VEC_DB_LOCATION = "./database/chroma_langchain_db"
-GRAPH_DB_LOCATION = './database/knowledge_graph'
-JSON_STATE_LOCATION = './database/latest_state.json'
+load_dotenv()
+
+# Locations
+
+NOTES_LOCATION = os.getenv("NOTES_LOCATION", "../mha_notes")
+DATABASE_LOCATION = os.getenv("DATABASE_LOCATION", "./database")
+VEC_DB_LOCATION = os.path.join(DATABASE_LOCATION, "chroma_langchain_db")
+GRAPH_DB_LOCATION = os.path.join(DATABASE_LOCATION, "knowledge_graph")
+JSON_STATE_LOCATION = os.path.join(DATABASE_LOCATION, "latest_state.json")
 LOG_LOCATION = './log/code.log'
 
 # Vector-store related data
