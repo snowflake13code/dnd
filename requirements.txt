@@ -1,0 +1,10 @@
+streamlit
+kuzu
+
+langchain_groq
+langchain_ollama
+langchain_chroma
+langchain
+
+dotenv
+pydantic

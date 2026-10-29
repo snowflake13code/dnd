@@ -1,0 +1,6 @@
+notes/*
+database/
+log/
+__pycache__/
+
+.env
